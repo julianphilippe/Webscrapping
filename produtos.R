@@ -18,7 +18,7 @@ buscarProdutosSubmarino <- function(produto){
   
   
   #variável de entrada
-  produto <- 'the last of us'
+  #produto <- 'the last of us'
   
   #tratamento da variável
   produto <- str_replace_all(produto, ' ', '%20')
