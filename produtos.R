@@ -18,7 +18,7 @@ buscarProdutosSubmarino <- function(produto){
   
   
   #variável de entrada
-  #produto <- 'the last of us'
+  #produto <- 'the witcher 3'
   
   #tratamento da variável
   produto <- str_replace_all(produto, ' ', '%20')
@@ -38,33 +38,35 @@ buscarProdutosSubmarino <- function(produto){
   #texto para caixa baixa
   data <- str_to_lower(html_text(data_html))
   
-  #localizar paradas do JSON
+  #localizar paradas do JSON com estoque
   parada_json <- as.data.frame(str_locate(data, '\\}\\}\\}')) 
   
-  index_na <- which(is.na(parada_json))
+  data_json <- cbind(data, parada_json)
   
-  #excluir NAs
-  parada_json <- parada_json %>%
-    filter(!is.na(start))
+  data_json$estoque <- (case_when(is.na(data_json$end) == TRUE  ~ "nao",
+                                  is.na(data_json$end) == FALSE ~ "sim"))
   
-  data <- as.tibble(data) 
-  
-  data <- data[-index_na[1],]
+  #selecionar com estoque
+  data_estoque_sim <- data_json %>%
+    filter(data_json$estoque == 'sim')
   
   
   #cria tibble de saída
   listaProdutos <- tibble()
   
-  for (i in 1:nrow(parada_json)){
+  
+  #dados em estoque
+  for (i in 1:nrow(data_estoque_sim)){
     
     #carrega dados do produto em JSON
-    data_json <- fromJSON(str_sub(as.character(data[i,]), 1, parada_json$end[i]))
+    data_json <- fromJSON(str_sub(as.character(data_estoque_sim$data[i]), 1, data_estoque_sim$end[i]))
     
     #armazena valores em variável 
     x <- tibble(name = data_json$name,
                 url = data_json$url,
                 image = data_json$image,
-                price = data_json$offers$price)
+                price = data_json$offers$price,
+                stock = 'sim')
     
     #carrega dados no tibble de saída
     listaProdutos <- rbind(listaProdutos,x)
@@ -73,7 +75,3 @@ buscarProdutosSubmarino <- function(produto){
   return(listaProdutos)
   
 }
-
-
-teste <- buscarProdutosSubmarino('iphone 5')
-
