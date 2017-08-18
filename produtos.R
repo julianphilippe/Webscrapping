@@ -31,6 +31,7 @@ buscarProdutosSubmarino <- function(produto){
   
   #acessar site
   webpage <- read_html(url)
+  data_acess <- Sys.time()
   
   #selecionar dados desejados CSS
   data_html <- html_nodes(webpage, '.card-product , .value')
@@ -50,6 +51,15 @@ buscarProdutosSubmarino <- function(produto){
   data_estoque_sim <- data_json %>%
     filter(data_json$estoque == 'sim')
   
+  #selecionar sem estoque
+  data_estoque_nao <- data_json %>%
+    filter(data_json$estoque == 'nao') 
+  
+  parada_json_nao <- as.data.frame(str_locate(data_estoque_nao$data, '\\}\\}')) 
+  
+  data_estoque_nao <- data_estoque_nao %>%
+    mutate(start = as.integer(parada_json_nao$start),
+           end = as.integer(parada_json_nao$end))
   
   #cria tibble de saída
   listaProdutos <- tibble()
@@ -66,7 +76,28 @@ buscarProdutosSubmarino <- function(produto){
                 url = data_json$url,
                 image = data_json$image,
                 price = data_json$offers$price,
-                stock = 'sim')
+                stock = 'sim',
+                store = 'www.submarino.com',
+                data_acess = data_acess)
+    
+    #carrega dados no tibble de saída
+    listaProdutos <- rbind(listaProdutos,x)
+  }
+  
+  #dados sem estoque
+  for (i in 1:nrow(data_estoque_nao)){
+    
+    #carrega dados do produto em JSON
+    data_json <- fromJSON(str_sub(as.character(data_estoque_nao$data[i]), 1, data_estoque_nao$end[i]))
+    
+    #armazena valores em variável 
+    x <- tibble(name = data_json$name,
+                url = data_json$url,
+                image = data_json$image,
+                price = 0,
+                stock = 'nao',
+                store = 'www.submarino.com',
+                data_acess = data_acess)
     
     #carrega dados no tibble de saída
     listaProdutos <- rbind(listaProdutos,x)
@@ -75,3 +106,6 @@ buscarProdutosSubmarino <- function(produto){
   return(listaProdutos)
   
 }
+
+
+teste <- buscarProdutosSubmarino('the witcher 3')
