@@ -84,23 +84,27 @@ buscarProdutosSubmarino <- function(produto){
     listaProdutos <- rbind(listaProdutos,x)
   }
   
-  #dados sem estoque
-  for (i in 1:nrow(data_estoque_nao)){
+  if (nrow(data_estoque_nao) > 0) {
     
-    #carrega dados do produto em JSON
-    data_json <- fromJSON(str_sub(as.character(data_estoque_nao$data[i]), 1, data_estoque_nao$end[i]))
+    #dados sem estoque
+    for (i in 1:nrow(data_estoque_nao)){
+      
+      #carrega dados do produto em JSON
+      data_json <- fromJSON(str_sub(as.character(data_estoque_nao$data[i]), 1, data_estoque_nao$end[i]))
+      
+      #armazena valores em variável 
+      x <- tibble(name = data_json$name,
+                  url = data_json$url,
+                  image = data_json$image,
+                  price = 0,
+                  stock = 'nao',
+                  store = 'www.submarino.com',
+                  data_acess = data_acess)
+      
+      #carrega dados no tibble de saída
+      listaProdutos <- rbind(listaProdutos,x)
+    }
     
-    #armazena valores em variável 
-    x <- tibble(name = data_json$name,
-                url = data_json$url,
-                image = data_json$image,
-                price = 0,
-                stock = 'nao',
-                store = 'www.submarino.com',
-                data_acess = data_acess)
-    
-    #carrega dados no tibble de saída
-    listaProdutos <- rbind(listaProdutos,x)
   }
   
   return(listaProdutos)
@@ -108,4 +112,4 @@ buscarProdutosSubmarino <- function(produto){
 }
 
 
-teste <- buscarProdutosSubmarino('the witcher 3')
+teste <- buscarProdutosSubmarino('iphone 6')
